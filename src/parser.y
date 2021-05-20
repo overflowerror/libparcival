@@ -1,4 +1,12 @@
 
+%{
+
+int yylex();
+
+extern void yyerror(char*);
+
+%}
+
 %token SECTION TEXT COMMA END
 %token PARAMS_BEGIN PARAMS_END
 %token STATEMENT_BEGIN STATEMENT_END
@@ -11,20 +19,19 @@
 file: metaSection SECTION mainSection
 ;
 
-metaSection: PARAMS_BEGIN parameters PARAMS_END
-           | STATEMENT_BEGIN metaStatement STATEMENT_END
+metaSection: /* empty */
+           | PARAMS_BEGIN parameters PARAMS_END metaSection
+           | STATEMENT_BEGIN metaStatement STATEMENT_END metaSection
 ;
 
 parameters: /* empty */
           | parameter moreParameters
 ;
 
-parameter: /* empty */
-         | TEXT parameter
+parameter: TEXT texts
 ;         
 
 moreParameters: /* empty */
-              | COMMA /* allow trailing commas */
               | COMMA parameter moreParameters
 ;
 
@@ -40,10 +47,11 @@ mainSection: /* empty */
 blockStatement: statement
 ;
 
-statement: TEXT /* statement can't be empty */
-         | TEXT statement
+statement: TEXT texts
 ;
 
-output: TEXT /* output can't be empty */
-      | TEXT output
+output: TEXT texts
 ;
+
+texts: /* empty */
+     | TEXT texts
