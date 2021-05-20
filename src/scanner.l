@@ -3,7 +3,7 @@ whitespace			[\n\t\r ]
 params_begin		"{$"
 params_end			"$}"
 
-section				"%%"
+section				"%%"[\t ]*\n
 
 statement_begin	"{%"
 statement_end		"%}"
@@ -14,10 +14,12 @@ output_end			"}}"
 block_end_token	"end"
 block_end			{whitespace}*{block_end_token}{whitespace}*
 
+id						[a-zA-Z_][a-zA-Z0-9_]*
+
 type_prefixes		"enum"|"struct"
 type_prefix			{type_prefixes}{whitespace}+
 type_pointer		{whitespace}*"*"
-type					{type_prefix}?[a-zA-Z0-9_]+{type_pointer}?
+type					{type_prefix}?{id}{type_pointer}?
 
 %option noyywrap
 %option nounput
@@ -37,6 +39,9 @@ type					{type_prefix}?[a-zA-Z0-9_]+{type_pointer}?
 	#include <stdbool.h>
 	#include <stdlib.h>
 	#include <stdio.h>
+	#include <string.h>
+	
+	#include <tree.h>
 	
 	#include "y.tab.h"
 	
@@ -50,25 +55,25 @@ type					{type_prefix}?[a-zA-Z0-9_]+{type_pointer}?
 <INITIAL,META_SECTION>{whitespace}+		{ /* ignore whitespaces */ }
 <INITIAL,META_SECTION>.						{ fprintf(stderr, "error: raw text not allowed in meta section (line %d)\n", yylineno); exit(1); }
 
-<PARAMS>{type}							{ return TEXT; }
+<PARAMS>{type}							{ yylval.text = strdup(yytext); return TEXT; }
+<PARAMS>{id}							{ yylval.text = strdup(yytext); return TEXT; }
 <PARAMS>{params_end}					{ BEGIN(META_SECTION); return PARAMS_END; }
 <PARAMS>","								{ return COMMA; }
 <PARAMS>{whitespace}+				{ /* ignore whitespaces */ }
-<PARAMS>"$"								{ return TEXT; /* catch $ as text */ }
 <PARAMS>.								{ fprintf(stderr, "error: illegal token '%s' in parameter block (line %d)\n", yytext, yylineno); exit(1); }
 
-<STATEMENT>[^%e]+						{ return TEXT; }
+<STATEMENT>[^%e]+						{ yylval.text = strdup(yytext); return TEXT; }
 <STATEMENT>{block_end}				{ return END; }
-<STATEMENT>"%"							{ return TEXT; /* catch % as text */ }
-<STATEMENT>"e"							{ return TEXT; /* catch e as text */ }
+<STATEMENT>"%"							{ yylval.text = strdup(yytext); return TEXT; /* catch % as text */ }
+<STATEMENT>"e"							{ yylval.text = strdup(yytext); return TEXT; /* catch e as text */ }
 <STATEMENT>{statement_end}			{ if (isMetaSection) BEGIN(META_SECTION); else BEGIN(MAIN_SECTION); return STATEMENT_END; }
 
-<MAIN_SECTION>{params_begin}		{ fprintf(stderr, "warning: parameter block not allowed in main section (line %d); assuming to be text\n", yylineno); return TEXT; }
+<MAIN_SECTION>{params_begin}		{ fprintf(stderr, "warning: parameter block not allowed in main section (line %d); assuming to be text\n", yylineno); yylval.text = strdup(yytext); return TEXT; }
 <MAIN_SECTION>{statement_begin}	{ BEGIN(STATEMENT); return STATEMENT_BEGIN; }
 <MAIN_SECTION>{output_begin}		{ BEGIN(OUTPUT); return OUTPUT_BEGIN; }
-<MAIN_SECTION>.						{ return TEXT; }
+<MAIN_SECTION>.						{ yylval.text = strdup(yytext); return TEXT; }
 
-<OUTPUT>[^}]+							{ return TEXT; }
+<OUTPUT>[^}]+							{ yylval.text = strdup(yytext); return TEXT; }
 <OUTPUT>{output_end}					{ BEGIN(MAIN_SECTION); return OUTPUT_END; }
-<OUTPUT>"}"								{ return TEXT; /* catch } as text */ }
+<OUTPUT>"}"								{ yylval.text = strdup(yytext); return TEXT; /* catch } as text */ }
 

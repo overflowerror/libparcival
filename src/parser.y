@@ -1,13 +1,38 @@
 
 %{
 
+#include <stdlib.h>
+#include <string.h>
+
+#include <tree.h>
+
 int yylex();
 
 extern void yyerror(char*);
 
 %}
 
-%token SECTION TEXT COMMA END
+%union {
+	struct tree tree;
+	struct params params;
+	
+	char* text;
+}
+
+%type <tree> mainSection
+
+%type <params> parameter
+%type <params> parameters
+%type <params> moreParameters
+
+%type <text> statementHeader
+%type <text> blockStatement
+%type <text> statement
+%type <text> output
+%type <text> texts
+
+%token <text> TEXT
+%token SECTION COMMA END
 %token PARAMS_BEGIN PARAMS_END
 %token STATEMENT_BEGIN STATEMENT_END
 %token OUTPUT_BEGIN OUTPUT_END
@@ -25,33 +50,88 @@ metaSection: /* empty */
 ;
 
 parameters: /* empty */
+	{
+		$$ = newParams();
+	}
           | parameter moreParameters
+	{
+		$$ = combineParams($1, $2);
+	}
 ;
 
-parameter: TEXT texts
+parameter: TEXT TEXT
+	{
+		$$ = newParams();
+		addParam(&$$, $1, $2);
+	}
 ;         
 
 moreParameters: /* empty */
+	{
+		$$ = newParams();
+	}
               | COMMA parameter moreParameters
+	{
+		$$ = combineParams($2, $3);
+	}
 ;
 
 metaStatement: statement
 ;
 
 mainSection: /* empty */
-           | TEXT mainSection
-           | STATEMENT_BEGIN blockStatement STATEMENT_END mainSection
-           | OUTPUT_BEGIN output OUTPUT_END mainSection
+	{
+		$$ = newTree();
+	}
+           | mainSection TEXT
+	{
+		$$ = $1;
+		addNode(&$$, newTextNode($2));
+	}
+           | mainSection statementHeader mainSection statementEnd
+	{
+		$$ = $1;
+		addNode(&$$, newStatementNode($2, $3));
+	}
+           | mainSection OUTPUT_BEGIN output OUTPUT_END
+	{
+		$$ = $1;
+		addNode(&$$, newOutputNode($3));
+	}
+;
+
+statementHeader: STATEMENT_BEGIN blockStatement STATEMENT_END
+	{
+		$$ = $2;
+	}
+;
+
+statementEnd: STATEMENT_BEGIN END STATEMENT_END
 ;
 
 blockStatement: statement
+	{
+		$$ = $1;
+	}
 ;
 
 statement: TEXT texts
+	{
+		$$ = combineStr($1, $2);
+	}
 ;
 
 output: TEXT texts
+	{
+		$$ = combineStr($1, $2);
+	}
 ;
 
 texts: /* empty */
+	{
+		$$ = strdup("");
+	}
      | TEXT texts
+	{
+		$$ = combineStr($1, $2);
+	}
