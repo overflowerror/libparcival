@@ -10,6 +10,8 @@ int yylex();
 
 extern void yyerror(char*);
 
+extern struct template result;
+
 %}
 
 %union {
@@ -20,7 +22,6 @@ extern void yyerror(char*);
 	char* text;
 }
 
-%type <template> template
 %type <template> metaSection
 
 %type <tree> mainSection
@@ -35,6 +36,7 @@ extern void yyerror(char*);
 %type <text> statement
 %type <text> output
 %type <text> texts
+%type <text> text
 
 %token <text> TEXT
 %token SECTION COMMA END
@@ -48,8 +50,8 @@ extern void yyerror(char*);
 
 template: metaSection SECTION mainSection
 	{
-		$$ = $1;
-		$$.tree = $3;
+		result = $1;
+		result.tree = $3;
 	}
 /*        | mainSection
 	{
@@ -116,7 +118,7 @@ mainSection: /* empty */
 	{
 		$$ = newTree();
 	}
-           | mainSection TEXT
+           | mainSection text
 	{
 		$$ = $1;
 		addNode(&$$, newTextNode($2));
@@ -160,11 +162,20 @@ output: TEXT texts
 	}
 ;
 
+text: TEXT
+	{
+		$$ = $1;
+	}
+    | TEXT text
+	{
+		$$ = combineStr($1, $2);
+	}
+
 texts: /* empty */
 	{
 		$$ = strdup("");
 	}
-     | TEXT texts
+     | text
 	{
-		$$ = combineStr($1, $2);
+		$$ = $1;
 	}

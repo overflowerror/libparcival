@@ -5,8 +5,8 @@ params_end			"$}"
 
 section				"%%"[\t ]*\n
 
-statement_begin	"{%"
-statement_end		"%}"
+statement_begin	[ \t]*"{%"
+statement_end		"%}"[ \t]*"\n"?
 
 output_begin		"{{"
 output_end			"}}"
@@ -19,7 +19,7 @@ id						[a-zA-Z_][a-zA-Z0-9_]*
 type_prefixes		"enum"|"struct"
 type_prefix			{type_prefixes}{whitespace}+
 type_pointer		{whitespace}*"*"
-type_or_id			{type_prefix}?{id}{type_pointer}?
+type_or_id			{type_prefix}?{id}{type_pointer}*
 
 %option noyywrap
 %option nounput
@@ -33,8 +33,6 @@ type_or_id			{type_prefix}?{id}{type_pointer}?
 %x STATEMENT
 %x OUTPUT
 
-%%
-
 %{
 	#include <stdbool.h>
 	#include <stdlib.h>
@@ -47,6 +45,8 @@ type_or_id			{type_prefix}?{id}{type_pointer}?
 	
 	bool isMetaSection = true;
 %}
+
+%%
 
 <INITIAL,META_SECTION>{params_begin}		{ BEGIN(PARAMS); return PARAMS_BEGIN; }
 <INITIAL,META_SECTION>{statement_begin}	{ BEGIN(STATEMENT); return STATEMENT_BEGIN; }
@@ -65,11 +65,12 @@ type_or_id			{type_prefix}?{id}{type_pointer}?
 <STATEMENT>{block_end}				{ return END; }
 <STATEMENT>"%"							{ yylval.text = strdup(yytext); return TEXT; /* catch % as text */ }
 <STATEMENT>"e"							{ yylval.text = strdup(yytext); return TEXT; /* catch e as text */ }
-<STATEMENT>{statement_end}			{ if (isMetaSection) BEGIN(META_SECTION); else BEGIN(MAIN_SECTION); return STATEMENT_END; }
+<STATEMENT>{statement_end}			{ BEGIN(isMetaSection ? META_SECTION : MAIN_SECTION); return STATEMENT_END; }
 
 <MAIN_SECTION>{params_begin}		{ fprintf(stderr, "warning: parameter block not allowed in main section (line %d); assuming to be text\n", yylineno); yylval.text = strdup(yytext); return TEXT; }
 <MAIN_SECTION>{statement_begin}	{ BEGIN(STATEMENT); return STATEMENT_BEGIN; }
 <MAIN_SECTION>{output_begin}		{ BEGIN(OUTPUT); return OUTPUT_BEGIN; }
+<MAIN_SECTION>\n						{ yylval.text = strdup(yytext); return TEXT; }
 <MAIN_SECTION>.						{ yylval.text = strdup(yytext); return TEXT; }
 
 <OUTPUT>[^}]+							{ yylval.text = strdup(yytext); return TEXT; }
