@@ -15,9 +15,13 @@ extern void yyerror(char*);
 %union {
 	struct tree tree;
 	struct params params;
+	struct template template;
 	
 	char* text;
 }
+
+%type <template> template
+%type <template> metaSection
 
 %type <tree> mainSection
 
@@ -27,6 +31,7 @@ extern void yyerror(char*);
 
 %type <text> statementHeader
 %type <text> blockStatement
+%type <text> metaStatement
 %type <text> statement
 %type <text> output
 %type <text> texts
@@ -37,16 +42,40 @@ extern void yyerror(char*);
 %token STATEMENT_BEGIN STATEMENT_END
 %token OUTPUT_BEGIN OUTPUT_END
 
-%start file
+%start template
 
 %%
 
-file: metaSection SECTION mainSection
+template: metaSection SECTION mainSection
+	{
+		$$ = $1;
+		$$.tree = $3;
+	}
+        | mainSection
+	{
+		$$ = newTemplate();
+		$$.tree = $1;
+	}
 ;
 
 metaSection: /* empty */
+	{
+		$$ = newTemplate();
+	}
            | PARAMS_BEGIN parameters PARAMS_END metaSection
+	{
+		$$ = $4;
+		if ($$.params.no != 0) {
+			yyerror("only one parameter block allowed in meta section");
+			YYERROR;
+		}
+		$$.params = $2;
+	}
            | STATEMENT_BEGIN metaStatement STATEMENT_END metaSection
+	{
+		$$ = $4;
+		addStat(&$$.stats, $2);
+	}
 ;
 
 parameters: /* empty */
@@ -77,6 +106,9 @@ moreParameters: /* empty */
 ;
 
 metaStatement: statement
+	{
+		$$ = $1;
+	}
 ;
 
 mainSection: /* empty */

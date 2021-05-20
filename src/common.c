@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "common.h"
 
@@ -21,4 +22,6 @@ void _panic(const char* function, const char* format, ...) {
 	}
 	
 	fprintf(stderr, "\n");
+	
+	exit(4);
 }

@@ -40,5 +40,20 @@ struct params newParams();
 void addParam(struct params*, char*, char*);
 struct params combineParams(struct params, struct params);
 
+struct stats {
+	char** texts;
+	size_t no;
+};
+
+struct stats newStats();
+void addStat(struct stats*, char*);
+
+struct template {
+	struct params params;
+	struct tree tree;
+	struct stats stats;
+};
+
+struct template newTemplate();
 
 #endif

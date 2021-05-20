@@ -135,3 +135,29 @@ struct params combineParams(struct params p1, struct params p2) {
 	
 	return p;
 }
+
+struct stats newStats() {
+	return (struct stats) {
+		.texts = NULL,
+		.no = 0
+	};
+}
+
+void addStat(struct stats* stats, char* text) {
+	void* tmp = realloc(stats->texts, sizeof(char*) * (stats->no + 1));
+	if (tmp == NULL) {
+		panic("realloc");
+	}
+	
+	stats->texts = tmp;
+	
+	stats->texts[stats->no++] = text;
+}
+
+struct template newTemplate() {
+	return (struct template) {
+		.params = newParams(),
+		.stats = newStats(),
+		.tree = newTree()
+	};
+}
