@@ -19,7 +19,7 @@ id						[a-zA-Z_][a-zA-Z0-9_]*
 type_prefixes		"enum"|"struct"
 type_prefix			{type_prefixes}{whitespace}+
 type_pointer		{whitespace}*"*"
-type					{type_prefix}?{id}{type_pointer}?
+type_or_id			{type_prefix}?{id}{type_pointer}?
 
 %option noyywrap
 %option nounput
@@ -52,11 +52,10 @@ type					{type_prefix}?{id}{type_pointer}?
 <INITIAL,META_SECTION>{statement_begin}	{ BEGIN(STATEMENT); return STATEMENT_BEGIN; }
 <INITIAL,META_SECTION>{section}				{ isMetaSection = false; BEGIN(MAIN_SECTION); return SECTION; }
 <INITIAL,META_SECTION>{output_begin}		{ fprintf(stderr, "error: output block not allowed in meta section (line %d)\n", yylineno); exit(1); }
-<INITIAL,META_SECTION>{whitespace}+		{ /* ignore whitespaces */ }
-<INITIAL,META_SECTION>.						{ fprintf(stderr, "error: raw text not allowed in meta section (line %d)\n", yylineno); exit(1); }
+<INITIAL,META_SECTION>{whitespace}+			{ /* ignore whitespaces */ }
+<INITIAL,META_SECTION>.							{ fprintf(stderr, "error: raw text not allowed in meta section (line %d)\n", yylineno); exit(1); }
 
-<PARAMS>{type}							{ yylval.text = strdup(yytext); return TEXT; }
-<PARAMS>{id}							{ yylval.text = strdup(yytext); return TEXT; }
+<PARAMS>{type_or_id}					{ yylval.text = strdup(yytext); return TEXT; }
 <PARAMS>{params_end}					{ BEGIN(META_SECTION); return PARAMS_END; }
 <PARAMS>","								{ return COMMA; }
 <PARAMS>{whitespace}+				{ /* ignore whitespaces */ }

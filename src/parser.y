@@ -51,11 +51,12 @@ template: metaSection SECTION mainSection
 		$$ = $1;
 		$$.tree = $3;
 	}
-        | mainSection
+/*        | mainSection
 	{
 		$$ = newTemplate();
 		$$.tree = $1;
 	}
+*/
 ;
 
 metaSection: /* empty */
