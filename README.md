@@ -150,6 +150,12 @@ Following example shows how this could look like (using the previous discussed "
 findTemplate("templates/index.html.templ")(stdout, "Page Title", userArray, userArrayLength);
 ```
 
+# Demo
+
+`make demo`
+
+The code for this demo can be found in `demofiles/`.
+
 # Contributing
 
 Issue Reports and Pull Requests are welcome.
