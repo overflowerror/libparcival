@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef COMMON_H_
+#define COMMON_H_
 
 void _panic(const char* f, const char* format, ...);
 #define panic(...) _panic(__func__, __VA_ARGS__)

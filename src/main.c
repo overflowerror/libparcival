@@ -1,27 +1,36 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <alloca.h>
 
 #include "tree.h"
 #include "common.h"
 
+#define FUNCTION_PREFIX ("template")
+
+extern FILE* yyin;
 extern int yyparse();
 extern int yylineno;
 
 struct template result;
 
 FILE* output;
-const char* name;
+char* name;
+const char* filename;
 
 void generateHeader() {
 	fprintf(output, "#include <stdio.h>\n");
 	fprintf(output, "#include <stdarg.h>\n");
 	fprintf(output, "\n");
+	fprintf(output, "#include <templates.h>\n");
+	fprintf(output, "\n");
+	fprintf(output, "extern void _registerTemplate(const char*, template_t);\n");
+	fprintf(output, "\n");
 	for (size_t i = 0; i < result.stats.no; i++) {
 		fprintf(output, "%s\n", result.stats.texts[i]);
 	}
 	fprintf(output, "\n");
-	fprintf(output, "void _template_%s_(FILE* out, ...) {\n", name);
+	fprintf(output, "static void %s_%s_(FILE* out, ...) {\n", FUNCTION_PREFIX, name);
 	for (size_t i = 0; i < result.params.no; i++) {
 		fprintf(output, "\t%s %s;\n", result.params.types[i], result.params.names[i]);
 	}
@@ -131,21 +140,52 @@ void generateTree() {
 
 void generateFooter() {
 	fprintf(output, "}\n");
+	fprintf(output, "__attribute__((constructor)) static void _register() {\n");
+	fprintf(output, "\t_registerTemplate(\"%s\", &%s_%s_);\n", filename, FUNCTION_PREFIX, name);
+	fprintf(output, "}\n");
 }
 
-int main() {
+void fixName() {
+	size_t len = strlen(name);
+	for (size_t i = 0; i < len; i++) {
+		if (!((name[i] >= 'a' && name[i] <= 'z') ||
+		      (name[i] >= 'A' && name[i] <= 'Z') ||
+		      (name[i] >= '0' && name[i] <= '9')
+		     )
+		) {
+			name[i] = '_';
+		}
+	}
+}
+
+int main(int argc, char** argv) {
+	// TODO: build sane argument parsing
+	if (argc != 2) {
+		panic("expected input file argument");
+	}
+
+	filename = argv[1];
+	
+	name = alloca(strlen(filename) + 1);
+	strcpy(name, filename);
+	fixName();
+
 	output = stdout;
-	name = "test";
+
+	yyin = fopen(filename, "r");
+	if (yyin == NULL) {
+		panic("fopen");
+	}
 
 	if (yyparse() < 0) {
 		return 1;
 	}
 	
 	generateHeader();
-	
 	generateTree();
-	
 	generateFooter();
+	
+	return 0;
 }
 
 void yyerror(char* s) {
