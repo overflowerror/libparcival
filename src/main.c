@@ -20,6 +20,7 @@ const char* filename;
 
 void generateHeader() {
 	fprintf(output, "#include <stdio.h>\n");
+	fprintf(output, "#include <stdlib.h>\n");
 	fprintf(output, "#include <stdarg.h>\n");
 	fprintf(output, "\n");
 	fprintf(output, "#include <templates.h>\n");
