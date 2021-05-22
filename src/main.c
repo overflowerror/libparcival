@@ -6,7 +6,10 @@
 #include "tree.h"
 #include "common.h"
 
-#define FUNCTION_PREFIX ("template")
+#define PRINT_PREFIX ("print_template")
+#define SIZE_PREFIX ("size_template")
+
+#define SIZE_ACCUMULATOR_VAR ("_total_size_")
 
 extern FILE* yyin;
 extern int yyparse();
@@ -31,18 +34,6 @@ void generateHeader() {
 		fprintf(output, "%s\n", result.stats.texts[i]);
 	}
 	fprintf(output, "\n");
-	fprintf(output, "static void %s_%s_(FILE* out, ...) {\n", FUNCTION_PREFIX, name);
-	for (size_t i = 0; i < result.params.no; i++) {
-		fprintf(output, "\t%s %s;\n", result.params.types[i], result.params.names[i]);
-	}
-	fprintf(output, "\t{\n");
-	fprintf(output, "\t\tva_list argptr;\n");
-	fprintf(output, "\t\tva_start(argptr, out);\n");
-	for (size_t i = 0; i < result.params.no; i++) {
-		fprintf(output, "\t\t%s = va_arg(argptr, %s);\n", result.params.names[i], result.params.types[i]);
-	}
-	fprintf(output, "\t\tva_end(argptr);\n");
-	fprintf(output, "\t}\n");
 }
 
 char* fixText(char* text) {
@@ -93,6 +84,71 @@ void indent(int indentation) {
 	}
 }
 
+void generateArguments(const char* firstArgument) {
+	for (size_t i = 0; i < result.params.no; i++) {
+		fprintf(output, "\t%s %s;\n", result.params.types[i], result.params.names[i]);
+	}
+	fprintf(output, "\t{\n");
+	fprintf(output, "\t\tva_list argptr;\n");
+	fprintf(output, "\t\tva_start(argptr, %s);\n", firstArgument);
+	for (size_t i = 0; i < result.params.no; i++) {
+		fprintf(output, "\t\t%s = va_arg(argptr, %s);\n", result.params.names[i], result.params.types[i]);
+	}
+	fprintf(output, "\t\tva_end(argptr);\n");
+	fprintf(output, "\t}\n");
+}
+
+void parseTreeSize(int indentation, struct tree tree);
+
+void generateTextNodeSize(int indentation, struct node node) {
+	indent(indentation);
+	fprintf(output, "%s += %zd;\n", SIZE_ACCUMULATOR_VAR, strlen(node.value.text));
+}
+
+void generateStatementNodeSize(int indentation, struct node node) {
+	indent(indentation);
+	fprintf(output, "%s {\n", node.statement);
+	
+	parseTreeSize(indentation + 1, *node.value.tree);
+	
+	indent(indentation);
+	fprintf(output, "}\n");
+}
+
+void generateOutputNodeSize(int indentation, struct node node) {
+	indent(indentation);
+	fprintf(output, "%s += snprintf(NULL, 0, %s);\n", SIZE_ACCUMULATOR_VAR, node.value.text);
+}
+
+void parseTreeSize(int indentation, struct tree tree) {
+	for (size_t i = 0; i < tree.kidsno; i++) {
+		switch(tree.kids[i].type) {
+			case TEXT_NODE:
+				generateTextNodeSize(indentation, tree.kids[i]);
+				break;
+			case STATEMENT_NODE:
+				generateStatementNodeSize(indentation, tree.kids[i]);
+				break;
+			case OUTPUT_NODE:
+				generateOutputNodeSize(indentation, tree.kids[i]);
+				break;
+			default:
+				panic("unknown node type");
+		}
+	}
+}
+
+void generateSize() {
+	fprintf(output, "static size_t %s_%s_(int _, ...) {\n", SIZE_PREFIX, name);
+	fprintf(output, "\tsize_t %s = 0;\n", SIZE_ACCUMULATOR_VAR);
+	generateArguments("_");
+	
+	parseTreeSize(1, result.tree);
+	
+	fprintf(output, "\treturn %s;\n", SIZE_ACCUMULATOR_VAR);
+	fprintf(output, "}\n");
+}
+
 static void parseTree(int, struct tree);
 
 void generateTextNode(int indentation, struct node node) {
@@ -136,13 +192,17 @@ void parseTree(int indentation, struct tree tree) {
 }
 
 void generateTree() {
+	fprintf(output, "static void %s_%s_(FILE* out, ...) {\n", PRINT_PREFIX, name);
+	generateArguments("out");
+	
 	parseTree(1, result.tree);
+	
+	fprintf(output, "}\n");
 }
 
-void generateFooter() {
-	fprintf(output, "}\n");
+void generateConstructor() {
 	fprintf(output, "__attribute__((constructor)) static void _register() {\n");
-	fprintf(output, "\t_registerTemplate(\"%s\", &%s_%s_);\n", filename, FUNCTION_PREFIX, name);
+	fprintf(output, "\t_registerTemplate(\"%s\", &%s_%s_);\n", filename, PRINT_PREFIX, name);
 	fprintf(output, "}\n");
 }
 
@@ -183,8 +243,9 @@ int main(int argc, char** argv) {
 	}
 	
 	generateHeader();
+	generateSize();
 	generateTree();
-	generateFooter();
+	generateConstructor();
 	
 	return 0;
 }
