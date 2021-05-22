@@ -38,7 +38,7 @@ The parameter block has the following syntax:
 {$ [parameter list ] $}
 ```
 
-The parameter list is comma-seperated list of the parameters of the template including their type.
+The parameter list is comma-seperated list of the parameters of the template including their type. 
 
 Example:
 ```
@@ -46,6 +46,8 @@ Example:
 ```
 
 Note: All types that C does not provide by default have to be declared in a statement block in the meta section or in a header file included by a statement block in the meta section. In the example above this would apply to the type `user_t`.
+
+Note: In case of pointer parameters they are not allowed to be modified in statement or output blocks. If the template has side effects like that, the behavior might be undefined (because of the calculation of the the output size).
 
 ### Statement Block
 
@@ -86,7 +88,7 @@ Output blocks have the following syntax:
 {{ [format string] {, format parameters} }}
 ```
 
-These blocks are effectively `printf()`-calls. In the rendered templated they will be replaced by the corresponding output.
+These blocks are effectively `printf()`-calls. In the rendered templated they will be replaced by the corresponding output. 
 
 Example:
 ```
