@@ -57,7 +57,7 @@ void _registerTemplate(const char* name, template_t f, template_length_t s) {
 static size_t emptyTemplateSize(va_list _) { return 0; }
 static void emptyTemplate(FILE* out, va_list _) { }
 
-void renderTemplate(const char* name, FILE* out, ...) {
+void _renderTemplate(const char* name, FILE* out, va_list argptr) {
 	template_t t = _findTemplate(name);
 	
 	if (t == NULL) {
@@ -65,15 +65,19 @@ void renderTemplate(const char* name, FILE* out, ...) {
 		t = &emptyTemplate;
 	}
 	
+	t(out, argptr);
+}
+
+void renderTemplate(const char* name, FILE* out, ...) {
 	va_list argptr;
 	va_start(argptr, out);
 	
-	t(out, argptr);
+	_renderTemplate(name, out, argptr);
 	
 	va_end(argptr);
 }
 
-size_t sizeTemplate(const char* name, ...) {
+size_t _sizeTemplate(const char* name, va_list argptr) {
 	template_length_t s = _findTemplateSize(name);
 	
 	if (s == NULL) {
@@ -81,12 +85,16 @@ size_t sizeTemplate(const char* name, ...) {
 		s = &emptyTemplateSize;
 	}
 	
+	return s(argptr);
+}
+
+size_t sizeTemplate(const char* name, ...) {
 	size_t result;
-	
+
 	va_list argptr;
 	va_start(argptr, name);
 	
-	result = s(argptr);
+	result = _sizeTemplate(name, argptr);
 	
 	va_end(argptr);
 	
