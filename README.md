@@ -143,11 +143,22 @@ Include the `templates.h` file into your program.
 #include <templates.h>
 ```
 
-Use the function `renderTemplate()` to render a template with a given namen. The first argument is the name of the template, the second one is the `FILE*` into with the template will be rendered. The following arguments are the parameters of the template itself (in the order that they were declared in the template file).
+The function `renderTemplate()` will render the template with the given name to a `FILE*`. The first argument is the name of the template, the second one is the `FILE*` into which the template will be rendered. The following arguments are the parameters of the template itself (in the order that they were declared in the template file).
+
+The function `sizeTemplate()` will return the exact length of the output of a render. The first argument is the name of the template. The following arguments are the template parameters.
+
+The function `renderTemplateStr()` will return a string containing the rendered template. The first argument is the name of the template. Followed by the template parameters. Note that the string is allocated on the heap - the result has to be freed manually.
 
 Following example shows how this could look like (using the previous discussed "Complete Example" withe name specified in "Translating Template").
 ```
-renderTemplate("templates/index.html.templ", qstdout, "Page Title", userArray, userArrayLength);
+renderTemplate("templates/index.html.templ", stdout, "Page Title", userArray, userArrayLength);
+
+
+size_t length = sizeTemplate("templates/index.html.templ", "Page Title", userArray, userArrayLength);
+
+
+char* string = renderTemplateStr("templates/index.html.templ", "Page Title", userArray, userArrayLength);
+free(string); // don't forget to free
 ```
 
 # Demo
