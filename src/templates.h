@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-typedef void (*template_t)(FILE*, ...);
-
-template_t findTemplate(const char*);
+void renderTemplate(const char*, FILE*, ...);
 
 #endif

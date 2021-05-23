@@ -9,7 +9,7 @@ int main() {
 		"foobar"
 	};	
 
-	findTemplate("demo.html.templ")(stdout, "User-List", names, 3);
+	renderTemplate("demo.html.templ", stdout, "User-List", names, 3);
 	
 	return 0;
 }

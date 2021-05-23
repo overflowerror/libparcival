@@ -28,7 +28,7 @@ void generateHeader() {
 	fprintf(output, "\n");
 	fprintf(output, "#include <templates.h>\n");
 	fprintf(output, "\n");
-	fprintf(output, "extern void _registerTemplate(const char*, template_t);\n");
+	fprintf(output, "extern void _registerTemplate(const char*, void (*)(FILE*, va_list), size_t (*)(va_list));\n");
 	fprintf(output, "\n");
 	for (size_t i = 0; i < result.stats.no; i++) {
 		fprintf(output, "%s\n", result.stats.texts[i]);
@@ -84,17 +84,14 @@ void indent(int indentation) {
 	}
 }
 
-void generateArguments(const char* firstArgument) {
+void generateArguments() {
 	for (size_t i = 0; i < result.params.no; i++) {
 		fprintf(output, "\t%s %s;\n", result.params.types[i], result.params.names[i]);
 	}
 	fprintf(output, "\t{\n");
-	fprintf(output, "\t\tva_list argptr;\n");
-	fprintf(output, "\t\tva_start(argptr, %s);\n", firstArgument);
 	for (size_t i = 0; i < result.params.no; i++) {
 		fprintf(output, "\t\t%s = va_arg(argptr, %s);\n", result.params.names[i], result.params.types[i]);
 	}
-	fprintf(output, "\t\tva_end(argptr);\n");
 	fprintf(output, "\t}\n");
 }
 
@@ -139,9 +136,9 @@ void parseTreeSize(int indentation, struct tree tree) {
 }
 
 void generateSize() {
-	fprintf(output, "static size_t %s_%s_(int _, ...) {\n", SIZE_PREFIX, name);
+	fprintf(output, "static size_t %s_%s_(va_list argptr) {\n", SIZE_PREFIX, name);
 	fprintf(output, "\tsize_t %s = 0;\n", SIZE_ACCUMULATOR_VAR);
-	generateArguments("_");
+	generateArguments();
 	
 	parseTreeSize(1, result.tree);
 	
@@ -192,8 +189,8 @@ void parseTree(int indentation, struct tree tree) {
 }
 
 void generateTree() {
-	fprintf(output, "static void %s_%s_(FILE* out, ...) {\n", PRINT_PREFIX, name);
-	generateArguments("out");
+	fprintf(output, "static void %s_%s_(FILE* out, va_list argptr) {\n", PRINT_PREFIX, name);
+	generateArguments();
 	
 	parseTree(1, result.tree);
 	
@@ -202,7 +199,7 @@ void generateTree() {
 
 void generateConstructor() {
 	fprintf(output, "__attribute__((constructor)) static void _register() {\n");
-	fprintf(output, "\t_registerTemplate(\"%s\", &%s_%s_);\n", filename, PRINT_PREFIX, name);
+	fprintf(output, "\t_registerTemplate(\"%s\", &%s_%s_, &%s_%s_);\n", filename, PRINT_PREFIX, name, SIZE_PREFIX, name);
 	fprintf(output, "}\n");
 }
 
