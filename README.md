@@ -143,13 +143,11 @@ Include the `templates.h` file into your program.
 #include <templates.h>
 ```
 
-Use the function `findTemplate()` to find the template for a given name. This function will always return a valid `template_t` pointer. In case no template with the given name is found a placeholder template is returned.
-
-The result is a function pointer that takes a `FILE*` argument (the template will be rendered to that stream) followed by the arguments that are specified in the template file (in the same order).
+Use the function `renderTemplate()` to render a template with a given namen. The first argument is the name of the template, the second one is the `FILE*` into with the template will be rendered. The following arguments are the parameters of the template itself (in the order that they were declared in the template file).
 
 Following example shows how this could look like (using the previous discussed "Complete Example" withe name specified in "Translating Template").
 ```
-findTemplate("templates/index.html.templ")(stdout, "Page Title", userArray, userArrayLength);
+renderTemplate("templates/index.html.templ", qstdout, "Page Title", userArray, userArrayLength);
 ```
 
 # Demo
