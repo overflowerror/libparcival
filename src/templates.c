@@ -11,7 +11,7 @@
 typedef void (*template_t)(FILE*, va_list);
 typedef size_t (*template_length_t)(va_list);
 
-struct {
+struct entry {
 	const char* name;
 	template_t f;
 	template_length_t s;
@@ -22,6 +22,16 @@ static template_t _findTemplate(const char* name) {
 	for (size_t i = 0; i < templateno; i++) {
 		if (strcmp(templates[i].name, name) == 0) {
 			return templates[i].f;
+		}
+	}
+	
+	return NULL;
+}
+
+static template_length_t _findTemplateSize(const char* name) {
+	for (size_t i = 0; i < templateno; i++) {
+		if (strcmp(templates[i].name, name) == 0) {
+			return templates[i].s;
 		}
 	}
 	
@@ -43,9 +53,9 @@ void _registerTemplate(const char* name, template_t f, template_length_t s) {
 	templates[templateno++].s = s;
 }
 
-static void emptyTemplate(FILE* out, va_list _) {
-	fprintf(out, "Template not found.\n");
-}
+
+static size_t emptyTemplateSize(va_list _) { return 0; }
+static void emptyTemplate(FILE* out, va_list _) { }
 
 void renderTemplate(const char* name, FILE* out, ...) {
 	template_t t = _findTemplate(name);
@@ -61,4 +71,67 @@ void renderTemplate(const char* name, FILE* out, ...) {
 	t(out, argptr);
 	
 	va_end(argptr);
+}
+
+size_t sizeTemplate(const char* name, ...) {
+	template_length_t s = _findTemplateSize(name);
+	
+	if (s == NULL) {
+		fprintf(stderr, "warning: template '%s' does not exist.\n", name);
+		s = &emptyTemplateSize;
+	}
+	
+	size_t result;
+	
+	va_list argptr;
+	va_start(argptr, name);
+	
+	result = s(argptr);
+	
+	va_end(argptr);
+	
+	return result;
+}
+
+char* renderTemplateStr(const char* name, ...) {
+	template_t t = _findTemplate(name);
+	template_length_t s = _findTemplateSize(name);
+	
+	if (t == NULL) {
+		fprintf(stderr, "warning: template '%s' does not exist.\n", name);
+		t = &emptyTemplate;
+		s = &emptyTemplateSize;
+	}
+	
+	size_t length;
+	char* result;
+	
+	va_list argptr, argptr2;
+	va_start(argptr, name);
+	va_copy(argptr2, argptr);
+	
+	length = s(argptr);
+	
+	va_end(argptr);
+	
+	result = malloc(length + 1);
+	if (result == NULL) {
+		va_end(argptr2);
+		return NULL;
+	}
+	
+	FILE* out = fmemopen(result, length, "w");
+	if (out == NULL) {
+		va_end(argptr2);
+		return NULL;
+	}
+	
+	t(out, argptr2);
+	fclose(out);
+	
+	va_end(argptr2);
+	
+	result[length] = '\0';
+	
+	return result;
 }
