@@ -128,7 +128,7 @@ char* renderTemplateStr(const char* name, ...) {
 		return NULL;
 	}
 	
-	FILE* out = fmemopen(result, length, "w");
+	FILE* out = fmemopen(result, length + 1, "w");
 	if (out == NULL) {
 		va_end(argptr2);
 		return NULL;
