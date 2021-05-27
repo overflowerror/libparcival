@@ -11,6 +11,9 @@ statement_end		"%}"[ \t]*"\n"?
 output_begin		"{{"
 output_end			"}}"
 
+structure_begin	"{#"
+structure_end		"#}"
+
 block_end_token	"end"
 block_end			{whitespace}*{block_end_token}{whitespace}*
 
@@ -31,6 +34,7 @@ type_or_id			{type_prefix}?{id}{type_pointer}*
 
 %x PARAMS
 %x STATEMENT
+%x STRUCTURE
 %x OUTPUT
 
 %{
@@ -51,6 +55,7 @@ type_or_id			{type_prefix}?{id}{type_pointer}*
 <INITIAL,META_SECTION>{params_begin}		{ BEGIN(PARAMS); return PARAMS_BEGIN; }
 <INITIAL,META_SECTION>{statement_begin}	{ BEGIN(STATEMENT); return STATEMENT_BEGIN; }
 <INITIAL,META_SECTION>{section}				{ isMetaSection = false; BEGIN(MAIN_SECTION); return SECTION; }
+<INITIAL,META_SECTION>{structure_begin}	{ BEGIN(STRUCTURE); return STRUCTURE_BEGIN; }
 <INITIAL,META_SECTION>{output_begin}		{ fprintf(stderr, "error: output block not allowed in meta section (line %d)\n", yylineno); exit(1); }
 <INITIAL,META_SECTION>{whitespace}+			{ /* ignore whitespaces */ }
 <INITIAL,META_SECTION>.							{ fprintf(stderr, "error: raw text not allowed in meta section (line %d)\n", yylineno); exit(1); }
@@ -67,8 +72,13 @@ type_or_id			{type_prefix}?{id}{type_pointer}*
 <STATEMENT>"e"							{ yylval.text = strdup(yytext); return TEXT; /* catch e as text */ }
 <STATEMENT>{statement_end}			{ BEGIN(isMetaSection ? META_SECTION : MAIN_SECTION); return STATEMENT_END; }
 
+<STRUCTURE>[^#]+						{ yylval.text = strdup(yytext); return TEXT; }
+<STRUCTURE>"#"							{ yylval.text = strdup(yytext); return TEXT; /* catch # as text */ }
+<STRUCTURE>{structure_end}			{ BEGIN(isMetaSection ? META_SECTION : MAIN_SECTION); return STRUCTURE_END; }
+
 <MAIN_SECTION>{params_begin}		{ fprintf(stderr, "warning: parameter block not allowed in main section (line %d); assuming to be text\n", yylineno); yylval.text = strdup(yytext); return TEXT; }
 <MAIN_SECTION>{statement_begin}	{ BEGIN(STATEMENT); return STATEMENT_BEGIN; }
+<MAIN_SECTION>{structure_begin}	{ BEGIN(STRUCTURE); return STRUCTURE_BEGIN; }
 <MAIN_SECTION>{output_begin}		{ BEGIN(OUTPUT); return OUTPUT_BEGIN; }
 <MAIN_SECTION>\n						{ yylval.text = strdup(yytext); return TEXT; }
 <MAIN_SECTION>.						{ yylval.text = strdup(yytext); return TEXT; }

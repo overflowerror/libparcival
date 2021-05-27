@@ -42,6 +42,7 @@ extern struct template result;
 %token SECTION COMMA END
 %token PARAMS_BEGIN PARAMS_END
 %token STATEMENT_BEGIN STATEMENT_END
+%token STRUCTURE_BEGIN STRUCTURE_END
 %token OUTPUT_BEGIN OUTPUT_END
 
 %start template
