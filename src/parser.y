@@ -42,12 +42,13 @@ extern struct template result;
 %type <nodeType> structureType
 
 %token <text> TEXT
+%token <text> WHITESPACE
 %token SECTION COMMA END
 %token PARAMS_BEGIN PARAMS_END
 %token STATEMENT_BEGIN STATEMENT_END
 %token STRUCTURE_BEGIN STRUCTURE_END
 %token OUTPUT_BEGIN OUTPUT_END
-%token RENDER
+%token RENDER OPEN_PARENTHESES CLOSE_PARENTHESES
 
 %start template
 
@@ -143,23 +144,22 @@ mainSection: /* empty */
 		$$ = $1;
 		addNode(&$$, newOutputNode($3));
 	}
-           | mainSection STRUCTURE_BEGIN texts structureType text STRUCTURE_END
-   {
-   	if (!checkCharset($3, " \t\n")) {
-   		yyerror("unknown structure block command");
-   		YYERROR;
-   	}
-   	
+           | mainSection STRUCTURE_BEGIN optionalWhitespaces structureType optionalWhitespaces OPEN_PARENTHESES text CLOSE_PARENTHESES optionalWhitespaces STRUCTURE_END
+   {	
    	$$ = $1;
    	switch($4) {
    		case RENDER_NODE:
-		   	addNode(&$$, newRenderNode($5));
+		   	addNode(&$$, newRenderNode($7));
 		   	break;
 		   default:
 		   	yyerror("unhandled structure block command (internal error)");
 		   	YYERROR;
 		}
    }
+;
+
+optionalWhitespaces: /* empty */
+                  | WHITESPACE optionalWhitespaces
 ;
 
 structureType: RENDER
@@ -199,7 +199,15 @@ text: TEXT
 	{
 		$$ = $1;
 	}
+	 | WHITESPACE
+	{
+		$$ = $1;
+	}
     | TEXT text
+	{
+		$$ = combineStr($1, $2);
+	}
+	 | WHITESPACE text
 	{
 		$$ = combineStr($1, $2);
 	}
