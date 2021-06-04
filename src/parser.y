@@ -44,6 +44,7 @@ extern struct template result;
 %token STATEMENT_BEGIN STATEMENT_END
 %token STRUCTURE_BEGIN STRUCTURE_END
 %token OUTPUT_BEGIN OUTPUT_END
+%token RENDER
 
 %start template
 

@@ -17,6 +17,8 @@ structure_end		"#}"
 block_end_token	"end"
 block_end			{whitespace}*{block_end_token}{whitespace}*
 
+render_token		"render"
+
 id						[a-zA-Z_][a-zA-Z0-9_]*
 
 type_prefixes		"enum"|"struct"
@@ -72,7 +74,9 @@ type_or_id			{type_prefix}?{id}{type_pointer}*
 <STATEMENT>"e"							{ yylval.text = strdup(yytext); return TEXT; /* catch e as text */ }
 <STATEMENT>{statement_end}			{ BEGIN(isMetaSection ? META_SECTION : MAIN_SECTION); return STATEMENT_END; }
 
-<STRUCTURE>[^#]+						{ yylval.text = strdup(yytext); return TEXT; }
+<STRUCTURE>[^#r]+						{ yylval.text = strdup(yytext); return TEXT; }
+<STRUCTURE>{render_token}			{ return RENDER; }
+<STRUCTURE>"r"							{ yylval.text = strdup(yytext); return TEXT; /* catch r as text */ }
 <STRUCTURE>"#"							{ yylval.text = strdup(yytext); return TEXT; /* catch # as text */ }
 <STRUCTURE>{structure_end}			{ BEGIN(isMetaSection ? META_SECTION : MAIN_SECTION); return STRUCTURE_END; }
 
