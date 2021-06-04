@@ -20,6 +20,7 @@ extern struct template result;
 	struct template template;
 	
 	char* text;
+	int nodeType;
 }
 
 %type <template> metaSection
@@ -37,6 +38,8 @@ extern struct template result;
 %type <text> output
 %type <text> texts
 %type <text> text
+
+%type <nodeType> structureType
 
 %token <text> TEXT
 %token SECTION COMMA END
@@ -148,10 +151,22 @@ mainSection: /* empty */
    	}
    	
    	$$ = $1;
+   	switch($4) {
+   		case RENDER_NODE:
+		   	addNode(&$$, newRenderNode($5));
+		   	break;
+		   default:
+		   	yyerror("unhandled structure block command (internal error)");
+		   	YYERROR;
+		}
    }
 ;
 
 structureType: RENDER
+	{
+		$$ = RENDER_NODE;
+	}
+;
 
 statementHeader: STATEMENT_BEGIN blockStatement STATEMENT_END
 	{

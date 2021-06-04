@@ -30,6 +30,8 @@ void generateHeader() {
 	fprintf(output, "\n");
 	fprintf(output, "extern void _registerTemplate(const char*, void (*)(FILE*, va_list), size_t (*)(va_list));\n");
 	fprintf(output, "\n");
+	fprintf(output, "#define _renderTemplate(f, t, ...) renderTemplate(t, f, __VA_ARGS__)\n");
+	fprintf(output, "\n");
 	for (size_t i = 0; i < result.stats.no; i++) {
 		fprintf(output, "%s\n", result.stats.texts[i]);
 	}
@@ -117,6 +119,11 @@ void generateOutputNodeSize(int indentation, struct node node) {
 	fprintf(output, "%s += snprintf(NULL, 0, %s);\n", SIZE_ACCUMULATOR_VAR, node.value.text);
 }
 
+void generateRenderNodeSize(int indentation, struct node node) {
+	indent(indentation);
+	fprintf(output, "%s += sizeTemplate(%s);\n", SIZE_ACCUMULATOR_VAR, node.value.text);
+}
+
 void parseTreeSize(int indentation, struct tree tree) {
 	for (size_t i = 0; i < tree.kidsno; i++) {
 		switch(tree.kids[i].type) {
@@ -128,6 +135,9 @@ void parseTreeSize(int indentation, struct tree tree) {
 				break;
 			case OUTPUT_NODE:
 				generateOutputNodeSize(indentation, tree.kids[i]);
+				break;
+			case RENDER_NODE:
+				generateRenderNodeSize(indentation, tree.kids[i]);
 				break;
 			default:
 				panic("unknown node type");
@@ -170,6 +180,11 @@ void generateOutputNode(int indentation, struct node node) {
 	fprintf(output, "fprintf(out, %s);\n", node.value.text);
 }
 
+void generateRenderNode(int indentation, struct node node) {
+	indent(indentation);
+	fprintf(output, "_renderTemplate(out, %s);\n", node.value.text);
+}
+
 void parseTree(int indentation, struct tree tree) {
 	for (size_t i = 0; i < tree.kidsno; i++) {
 		switch(tree.kids[i].type) {
@@ -181,6 +196,9 @@ void parseTree(int indentation, struct tree tree) {
 				break;
 			case OUTPUT_NODE:
 				generateOutputNode(indentation, tree.kids[i]);
+				break;
+			case RENDER_NODE:
+				generateRenderNode(indentation, tree.kids[i]);
 				break;
 			default:
 				panic("unknown node type");

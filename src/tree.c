@@ -50,6 +50,14 @@ struct node newOutputNode(char* text) {
 	};
 }
 
+
+struct node newRenderNode(char* arguments) {
+	return (struct node) {
+		.type = RENDER_NODE,
+		.value.text = arguments
+	};
+}
+
 struct tree newTree() {
 	return (struct tree) {
 		.kids = NULL,
@@ -184,3 +192,4 @@ bool checkCharset(const char* string, const char* charset) {
 
 	return true;
 }
+

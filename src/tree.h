@@ -6,8 +6,9 @@
 char* combineStr(char*, char*);
 
 #define TEXT_NODE      (0)
-#define STATEMENT_NODE (1) 
+#define STATEMENT_NODE (1)
 #define OUTPUT_NODE    (2)
+#define RENDER_NODE    (3)
 
 struct node {
 	int type;
@@ -27,6 +28,7 @@ struct tree {
 struct node newTextNode(char*);
 struct node newStatementNode(char*, struct tree);
 struct node newOutputNode(char*);
+struct node newRenderNode(char*);
 
 struct tree newTree();
 void addNode(struct tree*, struct node);
