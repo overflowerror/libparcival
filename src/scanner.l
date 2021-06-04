@@ -14,10 +14,10 @@ output_end			"}}"
 structure_begin	"{#"
 structure_end		"#}"
 
-block_end_token	"end"
+block_end_token	"end"|"END"
 block_end			{whitespace}*{block_end_token}{whitespace}*
 
-render_token		"render"
+render_token		"render"|"RENDER"
 
 id						[a-zA-Z_][a-zA-Z0-9_]*
 
