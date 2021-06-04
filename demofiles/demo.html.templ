@@ -10,7 +10,7 @@
 	</head>
 	<body>
 		{% for(size_t i = 0; i < no; i++) %}
-			{{ "%s", names[i] }}<br />
+			{# render "greeting.templ", names[i] #}<br />
 		{% end %}
 	</body>
 </html>
