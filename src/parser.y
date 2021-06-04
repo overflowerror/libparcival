@@ -81,6 +81,11 @@ metaSection: /* empty */
 		$$ = $4;
 		addStat(&$$.stats, $2);
 	}
+           | STRUCTURE_BEGIN
+   {
+   	yyerror("structure block in meta section not yet supported");
+   	YYERROR;
+   }
 ;
 
 parameters: /* empty */
@@ -135,7 +140,18 @@ mainSection: /* empty */
 		$$ = $1;
 		addNode(&$$, newOutputNode($3));
 	}
+           | mainSection STRUCTURE_BEGIN texts structureType text STRUCTURE_END
+   {
+   	if (!checkCharset($3, " \t\n")) {
+   		yyerror("unknown structure block command");
+   		YYERROR;
+   	}
+   	
+   	$$ = $1;
+   }
 ;
+
+structureType: RENDER
 
 statementHeader: STATEMENT_BEGIN blockStatement STATEMENT_END
 	{

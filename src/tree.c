@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "tree.h"
@@ -160,4 +161,26 @@ struct template newTemplate() {
 		.stats = newStats(),
 		.tree = newTree()
 	};
+}
+
+bool checkCharset(const char* string, const char* charset) {
+	size_t charsetLength = strlen(charset);
+
+	while (*string != '\0') {
+		bool ok = false;
+		for (size_t i = 0; i < charsetLength; i++) {
+			if (*string == charset[i]) {
+				ok = true;
+				break;
+			}
+		}
+		
+		if (!ok) {
+			return false;
+		}
+	
+		string++;
+	}
+
+	return true;
 }

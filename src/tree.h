@@ -1,6 +1,8 @@
 #ifndef TREE_H_
 #define TREE_H_
 
+#include <stdbool.h>
+
 char* combineStr(char*, char*);
 
 #define TEXT_NODE      (0)
@@ -55,5 +57,7 @@ struct template {
 };
 
 struct template newTemplate();
+
+bool checkCharset(const char*, const char*);
 
 #endif
