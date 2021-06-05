@@ -95,6 +95,27 @@ Example:
 {{ "foo: %s - %d", "bar", 69 }}
 ```
 
+### Structure Block
+
+Structure blocks have the following syntax:
+
+```
+{# [structure command] ( [parameters] ) #}
+```
+
+At the moment there is only one structure command implemented.
+
+## Render
+
+Using the render command, a another template can be included at the current position. The first parameter is the name of the template to be included as a string. All following parameters will be used as template parameters.
+
+Example:
+```
+{# render("templates/index.html.templ", "Page Title", userArray, userArrayLength) #}
+```
+
+All used variables have to be declared (for example as template parameters or local variables of statement blocks).
+
 ### Complete Example
 
 ```
