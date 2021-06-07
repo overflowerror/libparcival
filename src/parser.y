@@ -48,7 +48,7 @@ extern struct template result;
 %token STATEMENT_BEGIN STATEMENT_END
 %token STRUCTURE_BEGIN STRUCTURE_END
 %token OUTPUT_BEGIN OUTPUT_END
-%token RENDER OPEN_PARENTHESES CLOSE_PARENTHESES
+%token RENDER EXTENDS CHILD OPEN_PARENTHESES CLOSE_PARENTHESES
 
 %start template
 
@@ -85,10 +85,23 @@ metaSection: /* empty */
 		$$ = $4;
 		addStat(&$$.stats, $2);
 	}
-           | STRUCTURE_BEGIN
+           | STRUCTURE_BEGIN optionalWhitespaces structureType optionalWhitespaces OPEN_PARENTHESES text CLOSE_PARENTHESES optionalWhitespaces metaSection
    {
-   	yyerror("structure block in meta section not yet supported");
-   	YYERROR;
+   	$$ = $9;
+   	switch($3) {
+   		case RENDER_NODE:
+		   	yyerror("render command not allowed in meta section; ignoring");
+		   	break;
+		   case CHILD_NODE:
+		   	yyerror("child command not allowed in meta section; ignoring");
+		   	break;
+		   case EXTENDS_TOKEN:
+		   	yyerror("extends command not yet implemented; ignoring");
+		   	break;
+		   default:
+		   	yyerror("unhandled structure block command (internal error)");
+		   	YYERROR;
+		}
    }
 ;
 
@@ -151,6 +164,12 @@ mainSection: /* empty */
    		case RENDER_NODE:
 		   	addNode(&$$, newRenderNode($7));
 		   	break;
+		   case CHILD_NODE:
+		   	yyerror("child command not yet implemented; ignoring");
+		   	break;
+		   case EXTENDS_TOKEN:
+		   	yyerror("extends command not allowed in main section; ignoring");
+		   	break;
 		   default:
 		   	yyerror("unhandled structure block command (internal error)");
 		   	YYERROR;
@@ -165,6 +184,14 @@ optionalWhitespaces: /* empty */
 structureType: RENDER
 	{
 		$$ = RENDER_NODE;
+	}
+             | EXTENDS
+	{
+		$$ = EXTENDS_TOKEN;
+	}
+             | CHILD
+	{
+		$$ = CHILD_NODE;
 	}
 ;
 

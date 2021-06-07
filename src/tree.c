@@ -148,7 +148,8 @@ struct params combineParams(struct params p1, struct params p2) {
 struct stats newStats() {
 	return (struct stats) {
 		.texts = NULL,
-		.no = 0
+		.no = 0,
+		.parent = NULL
 	};
 }
 
@@ -161,6 +162,10 @@ void addStat(struct stats* stats, char* text) {
 	stats->texts = tmp;
 	
 	stats->texts[stats->no++] = text;
+}
+
+void setParent(struct stats* stats, char* parent) {
+	stats->parent = parent;
 }
 
 struct template newTemplate() {

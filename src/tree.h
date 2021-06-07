@@ -9,6 +9,8 @@ char* combineStr(char*, char*);
 #define STATEMENT_NODE (1)
 #define OUTPUT_NODE    (2)
 #define RENDER_NODE    (3)
+#define CHILD_NODE     (4)
+#define EXTENDS_TOKEN  (5)
 
 struct node {
 	int type;
@@ -47,6 +49,7 @@ struct params combineParams(struct params, struct params);
 struct stats {
 	char** texts;
 	size_t no;
+	char* parent;
 };
 
 struct stats newStats();
