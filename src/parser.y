@@ -85,9 +85,9 @@ metaSection: /* empty */
 		$$ = $4;
 		addStat(&$$.stats, $2);
 	}
-           | STRUCTURE_BEGIN optionalWhitespaces structureType optionalWhitespaces OPEN_PARENTHESES text CLOSE_PARENTHESES optionalWhitespaces metaSection
+           | STRUCTURE_BEGIN optionalWhitespaces structureType optionalWhitespaces OPEN_PARENTHESES text CLOSE_PARENTHESES optionalWhitespaces STRUCTURE_END metaSection
    {
-   	$$ = $9;
+   	$$ = $10;
    	switch($3) {
    		case RENDER_NODE:
 		   	yyerror("render command not allowed in meta section; ignoring");

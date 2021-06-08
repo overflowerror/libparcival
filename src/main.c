@@ -34,10 +34,12 @@ void generateHeader() {
 	fprintf(output, "#include <templates.h>\n");
 	fprintf(output, "\n");
 	fprintf(output, "extern void _registerTemplate(const char*, bool, void (*)(FILE*, va_list), void (*)(FILE*, va_list), size_t (*)(va_list));\n");
-	fprintf(output, "extern void renderTemplateStart(const char*, FILE*, ...);\n")
-	fprintf(output, "extern void renderTemplateEnd(const char*, FILE*, ...);\n")
+	fprintf(output, "extern void renderTemplateStart(const char*, FILE*, ...);\n");
+	fprintf(output, "extern void renderTemplateEnd(const char*, FILE*, ...);\n");
 	fprintf(output, "\n");
 	fprintf(output, "#define _renderTemplate(f, t, ...) renderTemplate(t, f, __VA_ARGS__)\n");
+	fprintf(output, "#define _renderTemplateStart(f, t, ...) renderTemplateStart(t, f, __VA_ARGS__)\n");
+	fprintf(output, "#define _renderTemplateEnd(f, t, ...) renderTemplateEnd(t, f, __VA_ARGS__)\n");
 	fprintf(output, "\n");
 	for (size_t i = 0; i < result.stats.no; i++) {
 		fprintf(output, "%s\n", result.stats.texts[i]);
@@ -160,6 +162,10 @@ void generateSize() {
 	fprintf(output, "\tsize_t %s = 0;\n", SIZE_ACCUMULATOR_VAR);
 	generateArguments();
 	
+	if (result.parent != NULL) {
+		fprintf(output, "%s += sizeTemplate(%s);\n", SIZE_ACCUMULATOR_VAR, result.parent);
+	}
+	
 	parseTreeSize(1, result.tree);
 	
 	fprintf(output, "\treturn %s;\n", SIZE_ACCUMULATOR_VAR);
@@ -230,7 +236,15 @@ void generateTree() {
 	fprintf(output, "static void %s_%s_(FILE* out, va_list argptr) {\n", PRINT_PREFIX, name);
 	generateArguments();
 	
+	if (result.parent != NULL) {
+		fprintf(output, "\t_renderTemplateStart(out, %s);\n", result.parent);
+	}
+	
 	parseTree(1, result.tree);
+	
+	if (result.parent != NULL) {
+		fprintf(output, "\t_renderTemplateEnd(out, %s);\n", result.parent);
+	}
 	
 	fprintf(output, "}\n");
 }
