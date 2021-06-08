@@ -161,11 +161,15 @@ mainSection: /* empty */
 		$$ = $1;
 		addNode(&$$, newOutputNode($3));
 	}
-           | mainSection STRUCTURE_BEGIN optionalWhitespaces structureType optionalWhitespaces OPEN_PARENTHESES text CLOSE_PARENTHESES optionalWhitespaces STRUCTURE_END
+           | mainSection STRUCTURE_BEGIN optionalWhitespaces structureType optionalWhitespaces OPEN_PARENTHESES texts CLOSE_PARENTHESES optionalWhitespaces STRUCTURE_END
    {	
    	$$ = $1;
    	switch($4) {
    		case RENDER_NODE:
+   			if (strlen($7) == 0) {
+   				yyerror("render command needs at least one argument (template name)");
+   				YYERROR;
+   			}
 		   	addNode(&$$, newRenderNode($7));
 		   	break;
 		   case CHILD_NODE:

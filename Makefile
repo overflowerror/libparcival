@@ -40,7 +40,7 @@ gen/lex.yy.c: src/scanner.l gen/y.tab.h gen
 	$(LEX) $<
 	mv lex.yy.c gen/
 	
-demo: demofiles/demo.c gen/demo.tab.c gen/greeting.tab.c $(A_LIB)
+demo: demofiles/demo.c gen/demo.tab.c gen/greeting.tab.c gen/layout.tab.c $(A_LIB)
 	$(CC) $(CFLAGS) -o $@ $^
 	
 gen/demo.tab.c: demofiles/demo.html.templ $(BIN) gen
@@ -50,6 +50,10 @@ gen/demo.tab.c: demofiles/demo.html.templ $(BIN) gen
 gen/greeting.tab.c: demofiles/greeting.templ $(BIN) gen
 	# change dir to set template name
 	cd demofiles && ../$(BIN) greeting.templ > ../$@
+	
+gen/layout.tab.c: demofiles/layout.html.templ $(BIN) gen
+	# change dir to set template name
+	cd demofiles && ../$(BIN) layout.html.templ > ../$@
 
 clean:
 	rm -f gen/*

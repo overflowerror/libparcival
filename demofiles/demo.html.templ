@@ -1,16 +1,7 @@
 {$ char* title, char** names, size_t no $}
 
+{# extends("layout.html.templ", title) #}
 %%
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>
-			{{ "%s", title }}
-		</title>
-	</head>
-	<body>
 		{% for(size_t i = 0; i < no; i++) %}
 			{# render("greeting.templ", names[i]) #}<br />
 		{% end %}
-	</body>
-</html>
