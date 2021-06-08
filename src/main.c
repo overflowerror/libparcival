@@ -102,6 +102,7 @@ void generateArguments() {
 	fprintf(output, "\t{\n");
 	for (size_t i = 0; i < result.params.no; i++) {
 		fprintf(output, "\t\t%s = va_arg(argptr, %s);\n", result.params.names[i], result.params.types[i]);
+		fprintf(output, "\t\t(void) %s;\n", result.params.names[i]);
 	}
 	fprintf(output, "\t}\n");
 }
