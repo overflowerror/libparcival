@@ -164,7 +164,7 @@ void generateSize() {
 	generateArguments();
 	
 	if (result.parent != NULL) {
-		fprintf(output, "%s += sizeTemplate(%s);\n", SIZE_ACCUMULATOR_VAR, result.parent);
+		fprintf(output, "\t%s += sizeTemplate(%s);\n", SIZE_ACCUMULATOR_VAR, result.parent);
 	}
 	
 	parseTreeSize(1, result.tree);
