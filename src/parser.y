@@ -96,7 +96,11 @@ metaSection: /* empty */
 		   	yyerror("child command not allowed in meta section; ignoring");
 		   	break;
 		   case EXTENDS_TOKEN:
-		   	yyerror("extends command not yet implemented; ignoring");
+		   	if ($$.parent != NULL) {
+		   		yyerror("template can only extent one parent");
+		   		YYERROR;
+		   	}
+		   	$$.parent = $6;
 		   	break;
 		   default:
 		   	yyerror("unhandled structure block command (internal error)");
@@ -165,7 +169,7 @@ mainSection: /* empty */
 		   	addNode(&$$, newRenderNode($7));
 		   	break;
 		   case CHILD_NODE:
-		   	yyerror("child command not yet implemented; ignoring");
+		   	addNode(&$$, newChildNode());
 		   	break;
 		   case EXTENDS_TOKEN:
 		   	yyerror("extends command not allowed in main section; ignoring");

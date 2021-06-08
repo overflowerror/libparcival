@@ -31,6 +31,7 @@ struct node newTextNode(char*);
 struct node newStatementNode(char*, struct tree);
 struct node newOutputNode(char*);
 struct node newRenderNode(char*);
+struct node newChildNode();
 
 struct tree newTree();
 void addNode(struct tree*, struct node);
@@ -49,7 +50,6 @@ struct params combineParams(struct params, struct params);
 struct stats {
 	char** texts;
 	size_t no;
-	char* parent;
 };
 
 struct stats newStats();
@@ -59,6 +59,7 @@ struct template {
 	struct params params;
 	struct tree tree;
 	struct stats stats;
+	const char* parent;
 };
 
 struct template newTemplate();

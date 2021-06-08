@@ -2,12 +2,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <alloca.h>
+#include <stdbool.h>
 
 #include "tree.h"
 #include "common.h"
 
 #define PRINT_PREFIX ("print_template")
 #define SIZE_PREFIX ("size_template")
+#define END_SUFFIX ("end")
 
 #define SIZE_ACCUMULATOR_VAR ("_total_size_")
 
@@ -21,14 +23,19 @@ FILE* output;
 char* name;
 const char* filename;
 
+bool isAbstract = false;
+
 void generateHeader() {
 	fprintf(output, "#include <stdio.h>\n");
 	fprintf(output, "#include <stdlib.h>\n");
 	fprintf(output, "#include <stdarg.h>\n");
+	fprintf(output, "#include <stdbool.h>\n");
 	fprintf(output, "\n");
 	fprintf(output, "#include <templates.h>\n");
 	fprintf(output, "\n");
-	fprintf(output, "extern void _registerTemplate(const char*, void (*)(FILE*, va_list), size_t (*)(va_list));\n");
+	fprintf(output, "extern void _registerTemplate(const char*, bool, void (*)(FILE*, va_list), void (*)(FILE*, va_list), size_t (*)(va_list));\n");
+	fprintf(output, "extern void renderTemplateStart(const char*, FILE*, ...);\n")
+	fprintf(output, "extern void renderTemplateEnd(const char*, FILE*, ...);\n")
 	fprintf(output, "\n");
 	fprintf(output, "#define _renderTemplate(f, t, ...) renderTemplate(t, f, __VA_ARGS__)\n");
 	fprintf(output, "\n");
@@ -139,6 +146,9 @@ void parseTreeSize(int indentation, struct tree tree) {
 			case RENDER_NODE:
 				generateRenderNodeSize(indentation, tree.kids[i]);
 				break;
+			case CHILD_NODE:
+				// ignore CHILD_NODE for size calculation
+				break;
 			default:
 				panic("unknown node type");
 		}
@@ -185,6 +195,13 @@ void generateRenderNode(int indentation, struct node node) {
 	fprintf(output, "_renderTemplate(out, %s);\n", node.value.text);
 }
 
+void generateChildNode() {
+	// assuming we are at root level in tree
+	fprintf(output, "}\n");
+	fprintf(output, "static void %s_%s_%s_(FILE* out, va_list argptr) {\n", PRINT_PREFIX, name, END_SUFFIX);
+	generateArguments();
+}
+
 void parseTree(int indentation, struct tree tree) {
 	for (size_t i = 0; i < tree.kidsno; i++) {
 		switch(tree.kids[i].type) {
@@ -199,6 +216,9 @@ void parseTree(int indentation, struct tree tree) {
 				break;
 			case RENDER_NODE:
 				generateRenderNode(indentation, tree.kids[i]);
+				break;
+			case CHILD_NODE:
+				generateChildNode();
 				break;
 			default:
 				panic("unknown node type");
@@ -217,7 +237,11 @@ void generateTree() {
 
 void generateConstructor() {
 	fprintf(output, "__attribute__((constructor)) static void _register() {\n");
-	fprintf(output, "\t_registerTemplate(\"%s\", &%s_%s_, &%s_%s_);\n", filename, PRINT_PREFIX, name, SIZE_PREFIX, name);
+	if (isAbstract) {
+		fprintf(output, "\t_registerTemplate(\"%s\", true, &%s_%s_, &%s_%s_%s_, &%s_%s_);\n", filename, PRINT_PREFIX, name, PRINT_PREFIX, name, END_SUFFIX, SIZE_PREFIX, name);
+	} else {
+		fprintf(output, "\t_registerTemplate(\"%s\", false, &%s_%s_, NULL, &%s_%s_);\n", filename, PRINT_PREFIX, name, SIZE_PREFIX, name);
+	}
 	fprintf(output, "}\n");
 }
 
@@ -231,6 +255,28 @@ void fixName() {
 		) {
 			name[i] = '_';
 		}
+	}
+}
+
+void preprocessTree(int depth, struct tree tree);
+
+void preprocessNode(int depth, struct node node) {
+	if (node.type == CHILD_NODE) {
+		if (depth > 0) {
+			panic("child command not allowed in statement block");
+		}
+		if (isAbstract) {
+			panic("only one child command allowed per template");
+		}
+		isAbstract = true;
+	} else if (node.type == STATEMENT_NODE) {
+		preprocessTree(depth + 1, *node.value.tree);
+	}
+}
+
+void preprocessTree(int depth, struct tree tree) {
+	for (size_t i = 0; i < tree.kidsno; i++) {
+		preprocessNode(depth, tree.kids[i]);
 	}
 }
 
@@ -256,6 +302,8 @@ int main(int argc, char** argv) {
 	if (yyparse() < 0) {
 		return 1;
 	}
+	
+	preprocessTree(0, result.tree);
 	
 	generateHeader();
 	generateSize();

@@ -58,6 +58,12 @@ struct node newRenderNode(char* arguments) {
 	};
 }
 
+struct node newChildNode() {
+	return (struct node) {
+		.type = CHILD_NODE,
+	};
+}
+
 struct tree newTree() {
 	return (struct tree) {
 		.kids = NULL,
@@ -148,8 +154,7 @@ struct params combineParams(struct params p1, struct params p2) {
 struct stats newStats() {
 	return (struct stats) {
 		.texts = NULL,
-		.no = 0,
-		.parent = NULL
+		.no = 0
 	};
 }
 
@@ -164,15 +169,12 @@ void addStat(struct stats* stats, char* text) {
 	stats->texts[stats->no++] = text;
 }
 
-void setParent(struct stats* stats, char* parent) {
-	stats->parent = parent;
-}
-
 struct template newTemplate() {
 	return (struct template) {
 		.params = newParams(),
 		.stats = newStats(),
-		.tree = newTree()
+		.tree = newTree(),
+		.parent = NULL
 	};
 }
 
