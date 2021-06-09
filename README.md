@@ -103,11 +103,13 @@ Structure blocks have the following syntax:
 {# [structure command] ( [parameters] ) #}
 ```
 
-At the moment there is only one structure command implemented.
+The following structure commands are implemented:
 
 ## Render
 
 Using the render command, a another template can be included at the current position. The first parameter is the name of the template to be included as a string. All following parameters will be used as template parameters.
+
+Note: The `render` command can only be used in the main section.
 
 Example:
 ```
@@ -116,7 +118,27 @@ Example:
 
 All used variables have to be declared (for example as template parameters or local variables of statement blocks).
 
-### Complete Example
+## Extends
+
+`extends` can be used to extend an existing abstract template (see "Child"). This is useful for splitting the page layout and the content into multiple files.
+
+Similar to `render` command the arguments are the name of the parent template followed by the template parameters of the parent (only parameters of the current template are allowed as variables).
+
+Note: The `extends` command can only be used in the meta section.
+
+```
+{# extends("templates/layout.html.templ", "Page Title") #}
+```
+
+## Child
+
+`child` is used in the main section of a template to indicate where the child template should be rendered. Using this command will implicitly set the template to abstract.
+
+```
+{# child() #}
+```
+
+### Basic Example
 
 ```
 {% #include "entities.h" %}
@@ -137,6 +159,8 @@ All used variables have to be declared (for example as template parameters or lo
 	</body>
 </html>
 ```
+
+For an example using structure blocks, please take a look at the provided demo files.
 
 ## Translating Template
 
