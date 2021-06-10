@@ -85,7 +85,7 @@ static template_length_t findTemplateSize(const char* name) {
 	return t.s;
 }
 
-static void _renderTemplate(const char* name, FILE* out, va_list argptr) {
+void _renderTemplate(const char* name, FILE* out, va_list argptr) {
 	template_t t = findTemplate(false, false, name);
 	t(out, argptr);
 }
@@ -127,7 +127,7 @@ void renderTemplateEnd(const char* name, FILE* out, ...) {
 	va_end(argptr);
 }
 
-static size_t _sizeTemplate(const char* name, va_list argptr) {
+size_t _sizeTemplate(const char* name, va_list argptr) {
 	template_length_t s = findTemplateSize(name);	
 	return s(argptr);
 }
